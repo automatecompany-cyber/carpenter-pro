@@ -62,5 +62,44 @@ export type InventoryItem = typeof inventoryItems.$inferSelect;
 export type NewInventoryItem = typeof inventoryItems.$inferInsert;
 export type Project = typeof projects.$inferSelect;
 export type NewProject = typeof projects.$inferInsert;
+export const orders = sqliteTable("orders", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  supplier: text("supplier").notNull(),
+  status: text("status", {
+    enum: ["draft", "ordered", "received", "cancelled"],
+  })
+    .notNull()
+    .default("draft"),
+  orderDate: text("order_date"),
+  expectedDate: text("expected_date"),
+  receivedDate: text("received_date"),
+  notes: text("notes"),
+  createdAt: text("created_at")
+    .notNull()
+    .$defaultFn(() => new Date().toISOString()),
+  updatedAt: text("updated_at")
+    .notNull()
+    .$defaultFn(() => new Date().toISOString()),
+});
+
+export const orderItems = sqliteTable("order_items", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  orderId: integer("order_id")
+    .notNull()
+    .references(() => orders.id, { onDelete: "cascade" }),
+  inventoryItemId: integer("inventory_item_id")
+    .notNull()
+    .references(() => inventoryItems.id, { onDelete: "restrict" }),
+  quantity: real("quantity").notNull().default(0),
+  unitCost: real("unit_cost").notNull().default(0),
+  createdAt: text("created_at")
+    .notNull()
+    .$defaultFn(() => new Date().toISOString()),
+});
+
 export type ProjectMaterial = typeof projectMaterials.$inferSelect;
 export type NewProjectMaterial = typeof projectMaterials.$inferInsert;
+export type Order = typeof orders.$inferSelect;
+export type NewOrder = typeof orders.$inferInsert;
+export type OrderItem = typeof orderItems.$inferSelect;
+export type NewOrderItem = typeof orderItems.$inferInsert;

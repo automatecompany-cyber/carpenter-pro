@@ -11,6 +11,7 @@ function Sidebar() {
   const links = [
     { href: "/", label: "Dashboard", icon: "📊" },
     { href: "/inventory", label: "Inventar", icon: "📦" },
+    { href: "/orders", label: "Bestellungen", icon: "🛒" },
     { href: "/projects", label: "Projekte", icon: "🔨" },
   ];
 
