@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git init:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git config:*)",
+      "Bash(TURSO_DATABASE_URL=\"libsql://carpenter-pro-automatecompany-cyber.aws-eu-west-1.turso.io\" TURSO_AUTH_TOKEN=\"eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3NzAzMDc0MjcsImlkIjoiYzY3NjMyZmItNmFmZi00M2VkLTlkMGEtZDE5Y2Q1MTg4NDU3IiwicmlkIjoiMjA1YzNkZDQtMWY1My00YWZmLWFiZDMtMzZmOTM4NDQ1ODY0In0.p4EPgnaJmEBVmxlJ6YLjScBGbX7X2lzgFtYC71GngZ0GqqWm4Oaer_26otUyeL-6Iukj62aRrTQqG6xY2f3JDw\" npx drizzle-kit push)",
+      "Bash(git push:*)",
+      "Bash(curl:*)"
+    ]
+  }
+}
