@@ -148,30 +148,54 @@ export default function ReportsPage() {
             />
           </div>
 
-          {/* Cost overview bar */}
+          {/* Cost overview donut charts */}
           <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-lg p-5 mb-6">
-            <h2 className="text-lg font-semibold mb-4">Kostenübersicht</h2>
-            <div className="space-y-4">
-              <CostBar
-                label="Einkauf (eingegangene Bestellungen)"
+            <h2 className="text-lg font-semibold mb-6">Kostenübersicht</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <DonutChart
+                label="Einkauf"
+                sub="Eingegangene Bestellungen"
                 value={data.orders.totalSpent}
-                max={Math.max(data.orders.totalSpent, data.materials.totalPlannedCost, data.materials.totalUsedCost, 1)}
-                color="var(--color-primary)"
+                total={data.orders.totalSpent + data.materials.totalUsedCost || 1}
+                color="#c49a6c"
               />
-              <CostBar
-                label="Geplante Materialkosten (aktive Projekte)"
+              <DonutChart
+                label="Geplant"
+                sub="Aktive Projekte"
                 value={data.materials.totalPlannedCost}
-                max={Math.max(data.orders.totalSpent, data.materials.totalPlannedCost, data.materials.totalUsedCost, 1)}
-                color="var(--color-warning)"
+                total={data.materials.totalPlannedCost || 1}
+                color="#f59e0b"
               />
-              <CostBar
-                label="Tatsächlicher Materialverbrauch"
+              <DonutChart
+                label="Verbraucht"
+                sub="Materialverbrauch"
                 value={data.materials.totalUsedCost}
-                max={Math.max(data.orders.totalSpent, data.materials.totalPlannedCost, data.materials.totalUsedCost, 1)}
-                color="var(--color-accent)"
+                total={data.materials.totalPlannedCost || 1}
+                color={data.materials.totalUsedCost > data.materials.totalPlannedCost ? "#ef4444" : "#22c55e"}
               />
             </div>
           </div>
+
+          {/* Spending breakdown donut */}
+          {(data.orders.totalSpent > 0 || data.materials.totalUsedCost > 0) && (
+            <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-lg p-5 mb-6">
+              <h2 className="text-lg font-semibold mb-6">Kostenverteilung</h2>
+              <div className="flex flex-col md:flex-row items-center gap-8">
+                <MultiDonut
+                  segments={[
+                    { label: "Einkauf", value: data.orders.totalSpent, color: "#c49a6c" },
+                    { label: "Materialverbrauch", value: data.materials.totalUsedCost, color: "#d4a574" },
+                    { label: "Inventarwert", value: data.inventory.totalValue, color: "#22c55e" },
+                  ]}
+                />
+                <div className="flex flex-col gap-3">
+                  <LegendItem color="#c49a6c" label="Einkauf" value={`${data.orders.totalSpent.toFixed(2)} €`} />
+                  <LegendItem color="#d4a574" label="Materialverbrauch" value={`${data.materials.totalUsedCost.toFixed(2)} €`} />
+                  <LegendItem color="#22c55e" label="Inventarwert" value={`${data.inventory.totalValue.toFixed(2)} €`} />
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Received orders */}
@@ -289,30 +313,128 @@ function SummaryCard({
   );
 }
 
-function CostBar({
+function DonutChart({
   label,
+  sub,
   value,
-  max,
+  total,
   color,
 }: {
   label: string;
+  sub: string;
   value: number;
-  max: number;
+  total: number;
   color: string;
 }) {
-  const pct = max > 0 ? (value / max) * 100 : 0;
+  const pct = total > 0 ? Math.min((value / total) * 100, 100) : 0;
+  const radius = 54;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDasharray = circumference;
+  const strokeDashoffset = circumference - (pct / 100) * circumference;
 
   return (
-    <div>
-      <div className="flex justify-between text-sm mb-1">
-        <span className="text-[var(--color-muted)]">{label}</span>
-        <span className="font-medium">{value.toFixed(2)} €</span>
+    <div className="flex flex-col items-center">
+      <div className="relative w-32 h-32">
+        <svg className="w-full h-full -rotate-90" viewBox="0 0 128 128">
+          <circle
+            cx="64"
+            cy="64"
+            r={radius}
+            fill="none"
+            stroke="var(--color-border)"
+            strokeWidth="12"
+          />
+          <circle
+            cx="64"
+            cy="64"
+            r={radius}
+            fill="none"
+            stroke={color}
+            strokeWidth="12"
+            strokeLinecap="round"
+            strokeDasharray={strokeDasharray}
+            strokeDashoffset={strokeDashoffset}
+            className="transition-all duration-500"
+          />
+        </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <span className="text-lg font-bold">{value.toFixed(0)} €</span>
+        </div>
       </div>
-      <div className="w-full h-3 bg-[var(--color-background)] rounded-full">
-        <div
-          className="h-3 rounded-full transition-all"
-          style={{ width: `${pct}%`, backgroundColor: color }}
+      <p className="text-sm font-semibold mt-2">{label}</p>
+      <p className="text-xs text-[var(--color-muted)]">{sub}</p>
+    </div>
+  );
+}
+
+function MultiDonut({
+  segments,
+}: {
+  segments: { label: string; value: number; color: string }[];
+}) {
+  const total = segments.reduce((sum, s) => sum + s.value, 0);
+  const radius = 64;
+  const circumference = 2 * Math.PI * radius;
+
+  let cumulativeOffset = 0;
+
+  return (
+    <div className="relative w-44 h-44">
+      <svg className="w-full h-full -rotate-90" viewBox="0 0 160 160">
+        <circle
+          cx="80"
+          cy="80"
+          r={radius}
+          fill="none"
+          stroke="var(--color-border)"
+          strokeWidth="16"
         />
+        {segments.map((seg, i) => {
+          const pct = total > 0 ? seg.value / total : 0;
+          const dashLength = pct * circumference;
+          const gapLength = circumference - dashLength;
+          const offset = -cumulativeOffset;
+          cumulativeOffset += dashLength;
+
+          return (
+            <circle
+              key={i}
+              cx="80"
+              cy="80"
+              r={radius}
+              fill="none"
+              stroke={seg.color}
+              strokeWidth="16"
+              strokeDasharray={`${dashLength} ${gapLength}`}
+              strokeDashoffset={offset}
+              className="transition-all duration-500"
+            />
+          );
+        })}
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="text-lg font-bold">{total.toFixed(0)} €</span>
+        <span className="text-xs text-[var(--color-muted)]">Gesamt</span>
+      </div>
+    </div>
+  );
+}
+
+function LegendItem({
+  color,
+  label,
+  value,
+}: {
+  color: string;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="flex items-center gap-3">
+      <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
+      <div className="flex justify-between gap-4 flex-1">
+        <span className="text-sm">{label}</span>
+        <span className="text-sm font-medium">{value}</span>
       </div>
     </div>
   );
