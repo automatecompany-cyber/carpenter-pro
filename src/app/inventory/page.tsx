@@ -12,11 +12,20 @@ const CATEGORIES = [
   "other",
 ] as const;
 
+const CATEGORY_LABELS: Record<string, string> = {
+  lumber: "Holz",
+  hardware: "Beschläge",
+  fasteners: "Befestigungen",
+  adhesives: "Klebstoffe",
+  finishes: "Oberflächenmittel",
+  other: "Sonstiges",
+};
+
 const EMPTY_FORM = {
   name: "",
   category: "lumber" as string,
   quantity: "",
-  unit: "pcs",
+  unit: "Stk",
   unitCost: "",
   supplier: "",
   reorderThreshold: "5",
@@ -64,7 +73,7 @@ export default function InventoryPage() {
   }
 
   async function handleDelete(id: number) {
-    if (!confirm("Delete this item?")) return;
+    if (!confirm("Diesen Artikel löschen?")) return;
     await fetch(`/api/inventory/${id}`, { method: "DELETE" });
     fetchItems();
   }
@@ -95,13 +104,13 @@ export default function InventoryPage() {
   });
 
   if (loading) {
-    return <div className="text-[var(--color-muted)]">Loading inventory...</div>;
+    return <div className="text-[var(--color-muted)]">Inventar wird geladen...</div>;
   }
 
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Inventory</h1>
+        <h1 className="text-2xl font-bold">Inventar</h1>
         <button
           onClick={() => {
             setForm(EMPTY_FORM);
@@ -110,15 +119,14 @@ export default function InventoryPage() {
           }}
           className="px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition-colors text-sm font-medium"
         >
-          + Add Item
+          + Artikel hinzufügen
         </button>
       </div>
 
-      {/* Filters */}
       <div className="flex gap-3 mb-4">
         <input
           type="text"
-          placeholder="Search items..."
+          placeholder="Artikel suchen..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm flex-1 max-w-xs"
@@ -128,20 +136,19 @@ export default function InventoryPage() {
           onChange={(e) => setFilterCategory(e.target.value)}
           className="px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm"
         >
-          <option value="all">All Categories</option>
+          <option value="all">Alle Kategorien</option>
           {CATEGORIES.map((cat) => (
             <option key={cat} value={cat}>
-              {cat.charAt(0).toUpperCase() + cat.slice(1)}
+              {CATEGORY_LABELS[cat]}
             </option>
           ))}
         </select>
       </div>
 
-      {/* Add/Edit form */}
       {showForm && (
         <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-lg p-5 mb-6">
           <h2 className="text-lg font-semibold mb-4">
-            {editingId ? "Edit Item" : "Add New Item"}
+            {editingId ? "Artikel bearbeiten" : "Neuer Artikel"}
           </h2>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
@@ -155,7 +162,7 @@ export default function InventoryPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Category *</label>
+              <label className="block text-sm font-medium mb-1">Kategorie *</label>
               <select
                 value={form.category}
                 onChange={(e) => setForm({ ...form, category: e.target.value })}
@@ -163,13 +170,13 @@ export default function InventoryPage() {
               >
                 {CATEGORIES.map((cat) => (
                   <option key={cat} value={cat}>
-                    {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                    {CATEGORY_LABELS[cat]}
                   </option>
                 ))}
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Quantity</label>
+              <label className="block text-sm font-medium mb-1">Menge</label>
               <input
                 type="number"
                 step="any"
@@ -179,17 +186,17 @@ export default function InventoryPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Unit</label>
+              <label className="block text-sm font-medium mb-1">Einheit</label>
               <input
                 type="text"
                 value={form.unit}
                 onChange={(e) => setForm({ ...form, unit: e.target.value })}
-                placeholder="pcs, ft, lbs, gal..."
+                placeholder="Stk, m, kg, L..."
                 className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Unit Cost ($)</label>
+              <label className="block text-sm font-medium mb-1">Stückpreis (€)</label>
               <input
                 type="number"
                 step="0.01"
@@ -199,7 +206,7 @@ export default function InventoryPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Supplier</label>
+              <label className="block text-sm font-medium mb-1">Lieferant</label>
               <input
                 type="text"
                 value={form.supplier}
@@ -208,7 +215,7 @@ export default function InventoryPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Low Stock Threshold</label>
+              <label className="block text-sm font-medium mb-1">Mindestbestand</label>
               <input
                 type="number"
                 value={form.reorderThreshold}
@@ -219,7 +226,7 @@ export default function InventoryPage() {
               />
             </div>
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium mb-1">Notes</label>
+              <label className="block text-sm font-medium mb-1">Notizen</label>
               <input
                 type="text"
                 value={form.notes}
@@ -232,7 +239,7 @@ export default function InventoryPage() {
                 type="submit"
                 className="px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition-colors text-sm font-medium"
               >
-                {editingId ? "Update" : "Add Item"}
+                {editingId ? "Aktualisieren" : "Hinzufügen"}
               </button>
               <button
                 type="button"
@@ -242,18 +249,17 @@ export default function InventoryPage() {
                 }}
                 className="px-4 py-2 border border-[var(--color-border)] rounded-lg text-sm hover:bg-[var(--color-background)] transition-colors"
               >
-                Cancel
+                Abbrechen
               </button>
             </div>
           </form>
         </div>
       )}
 
-      {/* Table */}
       {filtered.length === 0 ? (
         <div className="text-center py-12 text-[var(--color-muted)]">
-          <p className="text-lg mb-2">No inventory items found</p>
-          <p className="text-sm">Add your first item to get started.</p>
+          <p className="text-lg mb-2">Keine Artikel gefunden</p>
+          <p className="text-sm">Fügen Sie Ihren ersten Artikel hinzu.</p>
         </div>
       ) : (
         <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-lg overflow-hidden">
@@ -261,13 +267,13 @@ export default function InventoryPage() {
             <thead>
               <tr className="border-b border-[var(--color-border)] bg-[var(--color-background)]">
                 <th className="text-left px-4 py-3 font-medium">Name</th>
-                <th className="text-left px-4 py-3 font-medium">Category</th>
-                <th className="text-right px-4 py-3 font-medium">Qty</th>
-                <th className="text-left px-4 py-3 font-medium">Unit</th>
-                <th className="text-right px-4 py-3 font-medium">Unit Cost</th>
-                <th className="text-right px-4 py-3 font-medium">Total Value</th>
-                <th className="text-left px-4 py-3 font-medium">Supplier</th>
-                <th className="text-right px-4 py-3 font-medium">Actions</th>
+                <th className="text-left px-4 py-3 font-medium">Kategorie</th>
+                <th className="text-right px-4 py-3 font-medium">Menge</th>
+                <th className="text-left px-4 py-3 font-medium">Einheit</th>
+                <th className="text-right px-4 py-3 font-medium">Stückpreis</th>
+                <th className="text-right px-4 py-3 font-medium">Gesamtwert</th>
+                <th className="text-left px-4 py-3 font-medium">Lieferant</th>
+                <th className="text-right px-4 py-3 font-medium">Aktionen</th>
               </tr>
             </thead>
             <tbody>
@@ -281,14 +287,14 @@ export default function InventoryPage() {
                       {item.quantity <= item.reorderThreshold && (
                         <span
                           className="w-2 h-2 rounded-full bg-[var(--color-danger)] flex-shrink-0"
-                          title="Low stock"
+                          title="Niedriger Bestand"
                         />
                       )}
                       {item.name}
                     </div>
                   </td>
                   <td className="px-4 py-3 text-[var(--color-muted)]">
-                    {item.category}
+                    {CATEGORY_LABELS[item.category] || item.category}
                   </td>
                   <td className="px-4 py-3 text-right font-medium">
                     {item.quantity}
@@ -297,10 +303,10 @@ export default function InventoryPage() {
                     {item.unit}
                   </td>
                   <td className="px-4 py-3 text-right">
-                    ${item.unitCost.toFixed(2)}
+                    {item.unitCost.toFixed(2)} €
                   </td>
                   <td className="px-4 py-3 text-right font-medium">
-                    ${(item.quantity * item.unitCost).toFixed(2)}
+                    {(item.quantity * item.unitCost).toFixed(2)} €
                   </td>
                   <td className="px-4 py-3 text-[var(--color-muted)]">
                     {item.supplier || "—"}
@@ -310,13 +316,13 @@ export default function InventoryPage() {
                       onClick={() => startEdit(item)}
                       className="text-[var(--color-primary)] hover:underline mr-3"
                     >
-                      Edit
+                      Bearbeiten
                     </button>
                     <button
                       onClick={() => handleDelete(item.id)}
                       className="text-[var(--color-danger)] hover:underline"
                     >
-                      Delete
+                      Löschen
                     </button>
                   </td>
                 </tr>

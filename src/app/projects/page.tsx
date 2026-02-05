@@ -12,12 +12,20 @@ const STATUSES = [
   "cancelled",
 ] as const;
 
+const STATUS_LABELS: Record<string, string> = {
+  planning: "Planung",
+  in_progress: "In Arbeit",
+  on_hold: "Pausiert",
+  completed: "Abgeschlossen",
+  cancelled: "Storniert",
+};
+
 const STATUS_COLORS: Record<string, string> = {
-  planning: "bg-yellow-100 text-yellow-800",
-  in_progress: "bg-blue-100 text-blue-800",
-  on_hold: "bg-gray-100 text-gray-800",
-  completed: "bg-green-100 text-green-800",
-  cancelled: "bg-red-100 text-red-800",
+  planning: "bg-yellow-900/50 text-yellow-300",
+  in_progress: "bg-blue-900/50 text-blue-300",
+  on_hold: "bg-gray-700/50 text-gray-300",
+  completed: "bg-green-900/50 text-green-300",
+  cancelled: "bg-red-900/50 text-red-300",
 };
 
 const EMPTY_FORM = {
@@ -70,7 +78,7 @@ export default function ProjectsPage() {
   }
 
   async function handleDelete(id: number) {
-    if (!confirm("Delete this project and all its materials?")) return;
+    if (!confirm("Dieses Projekt und alle Materialien löschen?")) return;
     await fetch(`/api/projects/${id}`, { method: "DELETE" });
     fetchProjects();
   }
@@ -96,13 +104,13 @@ export default function ProjectsPage() {
   );
 
   if (loading) {
-    return <div className="text-[var(--color-muted)]">Loading projects...</div>;
+    return <div className="text-[var(--color-muted)]">Projekte werden geladen...</div>;
   }
 
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Projects</h1>
+        <h1 className="text-2xl font-bold">Projekte</h1>
         <button
           onClick={() => {
             setForm(EMPTY_FORM);
@@ -111,36 +119,34 @@ export default function ProjectsPage() {
           }}
           className="px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition-colors text-sm font-medium"
         >
-          + New Project
+          + Neues Projekt
         </button>
       </div>
 
-      {/* Filter */}
       <div className="mb-4">
         <select
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
           className="px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm"
         >
-          <option value="all">All Statuses</option>
+          <option value="all">Alle Status</option>
           {STATUSES.map((s) => (
             <option key={s} value={s}>
-              {s.replace("_", " ").replace(/\b\w/g, (c) => c.toUpperCase())}
+              {STATUS_LABELS[s]}
             </option>
           ))}
         </select>
       </div>
 
-      {/* Form */}
       {showForm && (
         <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-lg p-5 mb-6">
           <h2 className="text-lg font-semibold mb-4">
-            {editingId ? "Edit Project" : "New Project"}
+            {editingId ? "Projekt bearbeiten" : "Neues Projekt"}
           </h2>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium mb-1">
-                Project Name *
+                Projektname *
               </label>
               <input
                 required
@@ -152,7 +158,7 @@ export default function ProjectsPage() {
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">
-                Client Name *
+                Kundenname *
               </label>
               <input
                 required
@@ -173,16 +179,14 @@ export default function ProjectsPage() {
               >
                 {STATUSES.map((s) => (
                   <option key={s} value={s}>
-                    {s
-                      .replace("_", " ")
-                      .replace(/\b\w/g, (c) => c.toUpperCase())}
+                    {STATUS_LABELS[s]}
                   </option>
                 ))}
               </select>
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">
-                Client Address
+                Adresse
               </label>
               <input
                 type="text"
@@ -195,7 +199,7 @@ export default function ProjectsPage() {
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">
-                Client Phone
+                Telefon
               </label>
               <input
                 type="tel"
@@ -208,7 +212,7 @@ export default function ProjectsPage() {
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">
-                Client Email
+                E-Mail
               </label>
               <input
                 type="email"
@@ -221,7 +225,7 @@ export default function ProjectsPage() {
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">
-                Start Date
+                Startdatum
               </label>
               <input
                 type="date"
@@ -233,7 +237,7 @@ export default function ProjectsPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">End Date</label>
+              <label className="block text-sm font-medium mb-1">Enddatum</label>
               <input
                 type="date"
                 value={form.endDate}
@@ -242,7 +246,7 @@ export default function ProjectsPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Notes</label>
+              <label className="block text-sm font-medium mb-1">Notizen</label>
               <input
                 type="text"
                 value={form.notes}
@@ -255,7 +259,7 @@ export default function ProjectsPage() {
                 type="submit"
                 className="px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition-colors text-sm font-medium"
               >
-                {editingId ? "Update" : "Create Project"}
+                {editingId ? "Aktualisieren" : "Erstellen"}
               </button>
               <button
                 type="button"
@@ -265,18 +269,17 @@ export default function ProjectsPage() {
                 }}
                 className="px-4 py-2 border border-[var(--color-border)] rounded-lg text-sm hover:bg-[var(--color-background)] transition-colors"
               >
-                Cancel
+                Abbrechen
               </button>
             </div>
           </form>
         </div>
       )}
 
-      {/* Project list */}
       {filtered.length === 0 ? (
         <div className="text-center py-12 text-[var(--color-muted)]">
-          <p className="text-lg mb-2">No projects found</p>
-          <p className="text-sm">Create your first project to get started.</p>
+          <p className="text-lg mb-2">Keine Projekte gefunden</p>
+          <p className="text-sm">Erstellen Sie Ihr erstes Projekt.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -284,14 +287,14 @@ export default function ProjectsPage() {
             <Link
               key={project.id}
               href={`/projects/${project.id}`}
-              className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-lg p-5 hover:shadow-md transition-shadow block"
+              className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-lg p-5 hover:border-[var(--color-primary-dark)] transition-colors block"
             >
               <div className="flex items-start justify-between mb-3">
                 <h3 className="font-semibold">{project.name}</h3>
                 <span
                   className={`text-xs px-2 py-1 rounded-full font-medium ${STATUS_COLORS[project.status]}`}
                 >
-                  {project.status.replace("_", " ")}
+                  {STATUS_LABELS[project.status]}
                 </span>
               </div>
               <p className="text-sm text-[var(--color-muted)] mb-1">
@@ -304,7 +307,7 @@ export default function ProjectsPage() {
               )}
               <div className="flex gap-4 text-xs text-[var(--color-muted)] mt-3">
                 {project.startDate && <span>Start: {project.startDate}</span>}
-                {project.endDate && <span>End: {project.endDate}</span>}
+                {project.endDate && <span>Ende: {project.endDate}</span>}
               </div>
               <div className="mt-3 flex gap-2">
                 <button
@@ -314,7 +317,7 @@ export default function ProjectsPage() {
                   }}
                   className="text-xs text-[var(--color-primary)] hover:underline"
                 >
-                  Edit
+                  Bearbeiten
                 </button>
                 <button
                   onClick={(e) => {
@@ -323,7 +326,7 @@ export default function ProjectsPage() {
                   }}
                   className="text-xs text-[var(--color-danger)] hover:underline"
                 >
-                  Delete
+                  Löschen
                 </button>
               </div>
             </Link>

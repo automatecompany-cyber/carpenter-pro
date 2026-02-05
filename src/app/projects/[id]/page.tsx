@@ -29,12 +29,29 @@ interface ProjectDetail {
   materials: MaterialEntry[];
 }
 
+const STATUS_LABELS: Record<string, string> = {
+  planning: "Planung",
+  in_progress: "In Arbeit",
+  on_hold: "Pausiert",
+  completed: "Abgeschlossen",
+  cancelled: "Storniert",
+};
+
 const STATUS_COLORS: Record<string, string> = {
-  planning: "bg-yellow-100 text-yellow-800",
-  in_progress: "bg-blue-100 text-blue-800",
-  on_hold: "bg-gray-100 text-gray-800",
-  completed: "bg-green-100 text-green-800",
-  cancelled: "bg-red-100 text-red-800",
+  planning: "bg-yellow-900/50 text-yellow-300",
+  in_progress: "bg-blue-900/50 text-blue-300",
+  on_hold: "bg-gray-700/50 text-gray-300",
+  completed: "bg-green-900/50 text-green-300",
+  cancelled: "bg-red-900/50 text-red-300",
+};
+
+const CATEGORY_LABELS: Record<string, string> = {
+  lumber: "Holz",
+  hardware: "Beschläge",
+  fasteners: "Befestigungen",
+  adhesives: "Klebstoffe",
+  finishes: "Oberflächenmittel",
+  other: "Sonstiges",
 };
 
 export default function ProjectDetailPage({
@@ -106,18 +123,18 @@ export default function ProjectDetailPage({
   }
 
   if (loading) {
-    return <div className="text-[var(--color-muted)]">Loading project...</div>;
+    return <div className="text-[var(--color-muted)]">Projekt wird geladen...</div>;
   }
 
   if (!project) {
     return (
       <div className="text-center py-12">
-        <p className="text-lg text-[var(--color-muted)]">Project not found</p>
+        <p className="text-lg text-[var(--color-muted)]">Projekt nicht gefunden</p>
         <Link
           href="/projects"
           className="text-[var(--color-primary)] hover:underline mt-2 inline-block"
         >
-          Back to projects
+          Zurück zu Projekte
         </Link>
       </div>
     );
@@ -134,10 +151,9 @@ export default function ProjectDetailPage({
         href="/projects"
         className="text-sm text-[var(--color-primary)] hover:underline mb-4 inline-block"
       >
-        &larr; Back to projects
+        &larr; Zurück zu Projekte
       </Link>
 
-      {/* Project header */}
       <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-lg p-6 mb-6">
         <div className="flex items-start justify-between mb-4">
           <div>
@@ -147,26 +163,26 @@ export default function ProjectDetailPage({
           <span
             className={`text-sm px-3 py-1 rounded-full font-medium ${STATUS_COLORS[project.status]}`}
           >
-            {project.status.replace("_", " ")}
+            {STATUS_LABELS[project.status]}
           </span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
           {project.clientAddress && (
             <div>
-              <span className="text-[var(--color-muted)]">Address:</span>
+              <span className="text-[var(--color-muted)]">Adresse:</span>
               <p>{project.clientAddress}</p>
             </div>
           )}
           {project.clientPhone && (
             <div>
-              <span className="text-[var(--color-muted)]">Phone:</span>
+              <span className="text-[var(--color-muted)]">Telefon:</span>
               <p>{project.clientPhone}</p>
             </div>
           )}
           {project.clientEmail && (
             <div>
-              <span className="text-[var(--color-muted)]">Email:</span>
+              <span className="text-[var(--color-muted)]">E-Mail:</span>
               <p>{project.clientEmail}</p>
             </div>
           )}
@@ -178,7 +194,7 @@ export default function ProjectDetailPage({
           )}
           {project.endDate && (
             <div>
-              <span className="text-[var(--color-muted)]">End:</span>
+              <span className="text-[var(--color-muted)]">Ende:</span>
               <p>{project.endDate}</p>
             </div>
           )}
@@ -186,48 +202,46 @@ export default function ProjectDetailPage({
 
         {project.notes && (
           <div className="mt-4 text-sm">
-            <span className="text-[var(--color-muted)]">Notes:</span>
+            <span className="text-[var(--color-muted)]">Notizen:</span>
             <p className="mt-1">{project.notes}</p>
           </div>
         )}
       </div>
 
-      {/* Material list */}
       <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-lg p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">Material List</h2>
+          <h2 className="text-lg font-semibold">Materialliste</h2>
           <p className="text-sm text-[var(--color-muted)]">
-            Estimated cost:{" "}
+            Geschätzte Kosten:{" "}
             <span className="font-semibold text-[var(--color-foreground)]">
-              ${totalMaterialCost.toFixed(2)}
+              {totalMaterialCost.toFixed(2)} €
             </span>
           </p>
         </div>
 
-        {/* Add material form */}
         <form
           onSubmit={addMaterial}
           className="flex gap-3 mb-4 items-end flex-wrap"
         >
           <div className="flex-1 min-w-[200px]">
             <label className="block text-sm font-medium mb-1">
-              Inventory Item
+              Inventar-Artikel
             </label>
             <select
               value={selectedItemId}
               onChange={(e) => setSelectedItemId(e.target.value)}
               className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm"
             >
-              <option value="">Select an item...</option>
+              <option value="">Artikel auswählen...</option>
               {inventory.map((item) => (
                 <option key={item.id} value={item.id}>
-                  {item.name} ({item.quantity} {item.unit} available)
+                  {item.name} ({item.quantity} {item.unit} verfügbar)
                 </option>
               ))}
             </select>
           </div>
           <div className="w-32">
-            <label className="block text-sm font-medium mb-1">Qty Needed</label>
+            <label className="block text-sm font-medium mb-1">Benötigt</label>
             <input
               type="number"
               step="any"
@@ -240,25 +254,24 @@ export default function ProjectDetailPage({
             type="submit"
             className="px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition-colors text-sm font-medium"
           >
-            Add
+            Hinzufügen
           </button>
         </form>
 
-        {/* Materials table */}
         {project.materials.length === 0 ? (
           <p className="text-[var(--color-muted)] text-sm py-4">
-            No materials assigned yet.
+            Noch keine Materialien zugewiesen.
           </p>
         ) : (
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-[var(--color-border)]">
                 <th className="text-left py-2 font-medium">Material</th>
-                <th className="text-left py-2 font-medium">Category</th>
-                <th className="text-right py-2 font-medium">Needed</th>
-                <th className="text-right py-2 font-medium">Used</th>
-                <th className="text-right py-2 font-medium">Cost</th>
-                <th className="text-right py-2 font-medium">Actions</th>
+                <th className="text-left py-2 font-medium">Kategorie</th>
+                <th className="text-right py-2 font-medium">Benötigt</th>
+                <th className="text-right py-2 font-medium">Verbraucht</th>
+                <th className="text-right py-2 font-medium">Kosten</th>
+                <th className="text-right py-2 font-medium">Aktionen</th>
               </tr>
             </thead>
             <tbody>
@@ -269,7 +282,7 @@ export default function ProjectDetailPage({
                 >
                   <td className="py-2">{mat.itemName}</td>
                   <td className="py-2 text-[var(--color-muted)]">
-                    {mat.itemCategory}
+                    {CATEGORY_LABELS[mat.itemCategory] || mat.itemCategory}
                   </td>
                   <td className="py-2 text-right">
                     {mat.quantityNeeded} {mat.itemUnit}
@@ -286,14 +299,14 @@ export default function ProjectDetailPage({
                     />
                   </td>
                   <td className="py-2 text-right">
-                    ${(mat.quantityNeeded * mat.itemUnitCost).toFixed(2)}
+                    {(mat.quantityNeeded * mat.itemUnitCost).toFixed(2)} €
                   </td>
                   <td className="py-2 text-right">
                     <button
                       onClick={() => removeMaterial(mat.id)}
                       className="text-[var(--color-danger)] hover:underline text-xs"
                     >
-                      Remove
+                      Entfernen
                     </button>
                   </td>
                 </tr>
