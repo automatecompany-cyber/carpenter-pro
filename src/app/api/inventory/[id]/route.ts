@@ -2,11 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { inventoryItems } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { requireAuth, isAuthorized } from "@/lib/api-auth";
 
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await requireAuth(request, ["boss"]);
+  if (!isAuthorized(auth)) return auth;
+
   const { id } = await params;
   const body = await request.json();
 
@@ -27,7 +31,7 @@ export async function PUT(
     .returning();
 
   if (!item) {
-    return NextResponse.json({ error: "Item not found" }, { status: 404 });
+    return NextResponse.json({ error: "Artikel nicht gefunden" }, { status: 404 });
   }
 
   return NextResponse.json(item);
@@ -37,6 +41,9 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await requireAuth(request, ["boss"]);
+  if (!isAuthorized(auth)) return auth;
+
   const { id } = await params;
 
   const [deleted] = await db
@@ -45,7 +52,7 @@ export async function DELETE(
     .returning();
 
   if (!deleted) {
-    return NextResponse.json({ error: "Item not found" }, { status: 404 });
+    return NextResponse.json({ error: "Artikel nicht gefunden" }, { status: 404 });
   }
 
   return NextResponse.json({ success: true });

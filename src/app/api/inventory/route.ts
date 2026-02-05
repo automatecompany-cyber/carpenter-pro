@@ -1,14 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { inventoryItems } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { requireAuth, isAuthorized } from "@/lib/api-auth";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const auth = await requireAuth(request);
+  if (!isAuthorized(auth)) return auth;
+
   const items = await db.select().from(inventoryItems);
   return NextResponse.json(items);
 }
 
 export async function POST(request: NextRequest) {
+  const auth = await requireAuth(request, ["boss"]);
+  if (!isAuthorized(auth)) return auth;
+
   const body = await request.json();
 
   const [item] = await db

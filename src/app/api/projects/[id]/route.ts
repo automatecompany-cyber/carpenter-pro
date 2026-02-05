@@ -2,11 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { projects, projectMaterials, inventoryItems } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { requireAuth, isAuthorized } from "@/lib/api-auth";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await requireAuth(request, ["boss", "manager"]);
+  if (!isAuthorized(auth)) return auth;
+
   const { id } = await params;
 
   const [project] = await db
@@ -15,7 +19,7 @@ export async function GET(
     .where(eq(projects.id, Number(id)));
 
   if (!project) {
-    return NextResponse.json({ error: "Project not found" }, { status: 404 });
+    return NextResponse.json({ error: "Projekt nicht gefunden" }, { status: 404 });
   }
 
   const materials = await db
@@ -43,6 +47,9 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await requireAuth(request, ["boss", "manager"]);
+  if (!isAuthorized(auth)) return auth;
+
   const { id } = await params;
   const body = await request.json();
 
@@ -64,7 +71,7 @@ export async function PUT(
     .returning();
 
   if (!project) {
-    return NextResponse.json({ error: "Project not found" }, { status: 404 });
+    return NextResponse.json({ error: "Projekt nicht gefunden" }, { status: 404 });
   }
 
   return NextResponse.json(project);
@@ -74,6 +81,9 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await requireAuth(request, ["boss"]);
+  if (!isAuthorized(auth)) return auth;
+
   const { id } = await params;
 
   const [deleted] = await db
@@ -82,7 +92,7 @@ export async function DELETE(
     .returning();
 
   if (!deleted) {
-    return NextResponse.json({ error: "Project not found" }, { status: 404 });
+    return NextResponse.json({ error: "Projekt nicht gefunden" }, { status: 404 });
   }
 
   return NextResponse.json({ success: true });

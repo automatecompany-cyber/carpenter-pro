@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { orders, orderItems, inventoryItems, projectMaterials, projects } from "@/db/schema";
-import { eq, and, gte, lte, sql } from "drizzle-orm";
+import { eq, and, gte, lte } from "drizzle-orm";
+import { requireAuth, isAuthorized } from "@/lib/api-auth";
 
 export async function GET(request: NextRequest) {
+  const auth = await requireAuth(request, ["boss", "manager"]);
+  if (!isAuthorized(auth)) return auth;
+
   const { searchParams } = new URL(request.url);
   const month = searchParams.get("month"); // format: 2026-02
 

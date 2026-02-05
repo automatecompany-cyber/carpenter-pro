@@ -15,6 +15,18 @@ interface MaterialEntry {
   itemCategory: string;
 }
 
+interface Assignment {
+  id: number;
+  employeeId: number;
+  employeeName: string;
+  assignedAt: string;
+}
+
+interface Worker {
+  id: number;
+  name: string;
+}
+
 interface ProjectDetail {
   id: number;
   name: string;
@@ -65,10 +77,15 @@ export default function ProjectDetailPage({
   const [loading, setLoading] = useState(true);
   const [selectedItemId, setSelectedItemId] = useState("");
   const [qtyNeeded, setQtyNeeded] = useState("");
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [workers, setWorkers] = useState<Worker[]>([]);
+  const [selectedWorkerId, setSelectedWorkerId] = useState("");
 
   useEffect(() => {
     fetchProject();
     fetchInventory();
+    fetchAssignments();
+    fetchWorkers();
   }, []);
 
   async function fetchProject() {
@@ -120,6 +137,42 @@ export default function ProjectDetailPage({
       }),
     });
     fetchProject();
+  }
+
+  async function fetchAssignments() {
+    const res = await fetch(`/api/projects/${id}/assignments`);
+    if (res.ok) {
+      setAssignments(await res.json());
+    }
+  }
+
+  async function fetchWorkers() {
+    const res = await fetch("/api/employees");
+    if (res.ok) {
+      const allEmployees = await res.json();
+      setWorkers(allEmployees.filter((e: { role: string }) => e.role === "worker"));
+    }
+  }
+
+  async function assignWorker(e: React.FormEvent) {
+    e.preventDefault();
+    if (!selectedWorkerId) return;
+
+    await fetch(`/api/projects/${id}/assignments`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ employeeId: selectedWorkerId }),
+    });
+
+    setSelectedWorkerId("");
+    fetchAssignments();
+  }
+
+  async function removeAssignment(assignmentId: number) {
+    await fetch(`/api/projects/${id}/assignments?assignmentId=${assignmentId}`, {
+      method: "DELETE",
+    });
+    fetchAssignments();
   }
 
   if (loading) {
@@ -313,6 +366,65 @@ export default function ProjectDetailPage({
               ))}
             </tbody>
           </table>
+        )}
+      </div>
+
+      {/* Worker Assignments */}
+      <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-lg p-6 mt-6">
+        <h2 className="text-lg font-semibold mb-4">Zugewiesene Mitarbeiter</h2>
+
+        <form onSubmit={assignWorker} className="flex gap-3 mb-4 items-end flex-wrap">
+          <div className="flex-1 min-w-[200px]">
+            <label className="block text-sm font-medium mb-1">Mitarbeiter zuweisen</label>
+            <select
+              value={selectedWorkerId}
+              onChange={(e) => setSelectedWorkerId(e.target.value)}
+              className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-sm bg-[var(--color-input)]"
+            >
+              <option value="">Mitarbeiter auswählen...</option>
+              {workers
+                .filter((w) => !assignments.some((a) => a.employeeId === w.id))
+                .map((worker) => (
+                  <option key={worker.id} value={worker.id}>
+                    {worker.name}
+                  </option>
+                ))}
+            </select>
+          </div>
+          <button
+            type="submit"
+            className="px-4 py-2 bg-[var(--color-primary)] text-white rounded-lg hover:bg-[var(--color-primary-dark)] transition-colors text-sm font-medium"
+          >
+            Zuweisen
+          </button>
+        </form>
+
+        {assignments.length === 0 ? (
+          <p className="text-[var(--color-muted)] text-sm py-4">
+            Noch keine Mitarbeiter zugewiesen.
+          </p>
+        ) : (
+          <div className="space-y-2">
+            {assignments.map((assignment) => (
+              <div
+                key={assignment.id}
+                className="flex items-center justify-between py-2 px-3 bg-[var(--color-background)] rounded-lg"
+              >
+                <div>
+                  <span className="font-medium">{assignment.employeeName}</span>
+                  <span className="text-xs text-[var(--color-muted)] ml-2">
+                    seit {new Date(assignment.assignedAt).toLocaleDateString("de-DE")}
+                  </span>
+                </div>
+                <button
+                  onClick={() => removeAssignment(assignment.id)}
+                  className="text-[var(--color-danger)] hover:underline text-xs"
+                >
+                  Entfernen
+                </button>
+              </div>
+            ))}
+          </div>
         )}
       </div>
     </div>

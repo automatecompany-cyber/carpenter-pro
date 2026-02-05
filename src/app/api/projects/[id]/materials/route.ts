@@ -2,11 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { projectMaterials, inventoryItems } from "@/db/schema";
 import { eq, sql } from "drizzle-orm";
+import { requireAuth, isAuthorized } from "@/lib/api-auth";
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await requireAuth(request, ["boss", "manager"]);
+  if (!isAuthorized(auth)) return auth;
+
   const { id } = await params;
   const body = await request.json();
 
@@ -24,6 +28,9 @@ export async function POST(
 }
 
 export async function DELETE(request: NextRequest) {
+  const auth = await requireAuth(request, ["boss", "manager"]);
+  if (!isAuthorized(auth)) return auth;
+
   const { searchParams } = new URL(request.url);
   const materialId = searchParams.get("materialId");
 
@@ -47,6 +54,9 @@ export async function DELETE(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
+  const auth = await requireAuth(request, ["boss", "manager", "worker"]);
+  if (!isAuthorized(auth)) return auth;
+
   const body = await request.json();
   const newUsed = Number(body.quantityUsed);
 

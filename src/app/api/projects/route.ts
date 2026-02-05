@@ -1,13 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { projects } from "@/db/schema";
+import { requireAuth, isAuthorized } from "@/lib/api-auth";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const auth = await requireAuth(request, ["boss", "manager"]);
+  if (!isAuthorized(auth)) return auth;
+
   const allProjects = await db.select().from(projects);
   return NextResponse.json(allProjects);
 }
 
 export async function POST(request: NextRequest) {
+  const auth = await requireAuth(request, ["boss", "manager"]);
+  if (!isAuthorized(auth)) return auth;
+
   const body = await request.json();
 
   const [project] = await db

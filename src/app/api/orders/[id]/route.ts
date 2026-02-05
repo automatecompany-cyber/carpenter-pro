@@ -2,11 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { orders, orderItems, inventoryItems } from "@/db/schema";
 import { eq, sql } from "drizzle-orm";
+import { requireAuth, isAuthorized } from "@/lib/api-auth";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await requireAuth(request, ["boss", "manager"]);
+  if (!isAuthorized(auth)) return auth;
+
   const { id } = await params;
 
   const [order] = await db
@@ -39,6 +43,9 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await requireAuth(request, ["boss"]);
+  if (!isAuthorized(auth)) return auth;
+
   const { id } = await params;
   const body = await request.json();
 
@@ -94,6 +101,9 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await requireAuth(request, ["boss"]);
+  if (!isAuthorized(auth)) return auth;
+
   const { id } = await params;
 
   const [deleted] = await db
