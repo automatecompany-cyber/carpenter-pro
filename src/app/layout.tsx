@@ -13,6 +13,7 @@ function Sidebar() {
     { href: "/inventory", label: "Inventar", icon: "📦" },
     { href: "/orders", label: "Bestellungen", icon: "🛒" },
     { href: "/projects", label: "Projekte", icon: "🔨" },
+    { href: "/reports", label: "Monatsübersicht", icon: "📈" },
   ];
 
   return (
