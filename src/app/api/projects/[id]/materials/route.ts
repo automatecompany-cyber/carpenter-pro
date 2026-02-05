@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
-import { projectMaterials } from "@/db/schema";
-import { eq, and } from "drizzle-orm";
+import { projectMaterials, inventoryItems } from "@/db/schema";
+import { eq, sql } from "drizzle-orm";
 
 export async function POST(
   request: NextRequest,
@@ -48,18 +48,39 @@ export async function DELETE(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   const body = await request.json();
+  const newUsed = Number(body.quantityUsed);
+
+  // Get current value to calculate the difference
+  const [existing] = await db
+    .select()
+    .from(projectMaterials)
+    .where(eq(projectMaterials.id, Number(body.id)));
+
+  if (!existing) {
+    return NextResponse.json({ error: "Material nicht gefunden" }, { status: 404 });
+  }
+
+  const oldUsed = existing.quantityUsed;
+  const diff = newUsed - oldUsed;
 
   const [updated] = await db
     .update(projectMaterials)
     .set({
       quantityNeeded: Number(body.quantityNeeded),
-      quantityUsed: Number(body.quantityUsed),
+      quantityUsed: newUsed,
     })
     .where(eq(projectMaterials.id, Number(body.id)))
     .returning();
 
-  if (!updated) {
-    return NextResponse.json({ error: "Material not found" }, { status: 404 });
+  // Deduct the difference from inventory (positive diff = more used = deduct)
+  if (diff !== 0) {
+    await db
+      .update(inventoryItems)
+      .set({
+        quantity: sql`${inventoryItems.quantity} - ${diff}`,
+        updatedAt: new Date().toISOString(),
+      })
+      .where(eq(inventoryItems.id, existing.inventoryItemId));
   }
 
   return NextResponse.json(updated);
