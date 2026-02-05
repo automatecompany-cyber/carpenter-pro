@@ -1,4 +1,4 @@
-const BASE = "http://localhost:3001";
+const BASE = process.env.SEED_URL || "http://localhost:3002";
 
 const inventory = [
   { name: "2x4 Pine Studs", category: "lumber", quantity: 120, unit: "pcs", unitCost: 3.50, supplier: "Home Depot", reorderThreshold: 20, notes: "8ft standard studs" },
