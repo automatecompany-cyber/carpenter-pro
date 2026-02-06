@@ -56,12 +56,35 @@ export default function AttendancePage() {
     setLoading(false);
   }
 
-  async function updateAttendance(
+  function updateAttendance(
     employeeId: number,
     field: "checkIn" | "checkOut",
     value: string
   ) {
-    await fetch("/api/attendance", {
+    // Update local state immediately
+    setRecords((prev) => {
+      const existing = prev.find((r) => r.employeeId === employeeId);
+      if (existing) {
+        return prev.map((r) =>
+          r.employeeId === employeeId ? { ...r, [field]: value || null } : r
+        );
+      }
+      return [
+        ...prev,
+        {
+          id: 0,
+          employeeId,
+          employeeName: "",
+          date: selectedDate,
+          checkIn: field === "checkIn" ? value || null : null,
+          checkOut: field === "checkOut" ? value || null : null,
+          notes: null,
+        },
+      ];
+    });
+
+    // Save to API in background
+    fetch("/api/attendance", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -70,7 +93,6 @@ export default function AttendancePage() {
         [field]: value || null,
       }),
     });
-    fetchAttendance();
   }
 
   function calculateHours(checkIn: string, checkOut: string): number {
